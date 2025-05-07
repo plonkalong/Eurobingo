@@ -4,26 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eurovision Bingo Night</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            background-image: linear-gradient(to right top, #6a0dad, #8a2be2, #a020f0, #ba55d3, #d87093, #ff69b4, #ffb6c1);
-            background-size: 400% 400%;
-            animation: gradientAnimation 15s ease infinite;
+            background-color: #1a202c;
             color: white;
             min-height: 100vh;
             padding-bottom: 4rem;
         }
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
         .bingo-card {
-            background-color: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.3);
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -32,70 +25,51 @@
             margin-bottom: 1rem;
         }
         .bingo-cell {
-            transition: all 0.3s ease;
+            text-align: center;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            aspect-ratio: 1 / 1;
-            font-size: 0.65rem; /* Reduced font size to fit text */
-            line-height: 1.2;
-            padding: 0.25rem;
-            word-break: break-word; /* Ensures long words wrap */
-            overflow-wrap: break-word; /* Ensures content fits */
-            text-align: center;
+            cursor: pointer;
+            transition: background 0.3s ease;
         }
         .bingo-cell.marked {
-            background-color: #FFD700;
+            background: #FFD700;
             color: #4B0082;
-            font-weight: bold;
-            transform: scale(1.05);
-        }
-        .bingo-cell:not(.marked):hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-        .bingo-title {
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-        }
-        .player-name {
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-        }
-        .claim-card-btn {
-            display: block;
-            margin: 10px auto;
-            background-color: #4CAF50;
-            color: white;
-            padding: 6px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .claim-card-btn:hover {
-            background-color: #45a049;
-        }
-        .player-assigned {
-            font-size: 0.8rem;
-            color: #FFD700;
-            text-align: center;
-            margin-top: 5px;
         }
     </style>
 </head>
-<body class="flex flex-col items-center min-h-screen p-4 sm:p-6">
-    <header class="my-8 text-center">
-        <h1 class="text-4xl sm:text-5xl font-bold bingo-title">Eurovision Bingo Night!</h1>
-        <p class="text-lg sm:text-xl mt-2">Click squares as events happen. First to BINGO wins bragging rights!</p>
+<body>
+    <header class="text-center my-8">
+        <h1 class="text-4xl font-bold">Eurovision Bingo Night!</h1>
+        <p class="text-lg">Click squares as events happen. First to BINGO wins bragging rights!</p>
     </header>
-    <div id="controls" class="my-6">
-        <button id="newGameButton" class="px-6 py-3 bg-pink-500 hover:bg-pink-600 text-white font-semibold rounded-lg shadow-md transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-pink-300">
-            Start New Game / Shuffle Cards
-        </button>
-    </div>
-    <main id="bingoCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl"></main>
+    <main id="bingoCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto"></main>
     <script>
-        const eurovisionEvents = [
+    // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyAGpiRjxsvKCWUIF6wFBr8P68WThiDDbBw",
+  authDomain: "eurobingo-3affb.firebaseapp.com",
+  projectId: "eurobingo-3affb",
+  storageBucket: "eurobingo-3affb.firebasestorage.app",
+  messagingSenderId: "696157086508",
+  appId: "1:696157086508:web:ddefc08a080fe815aec289",
+  measurementId: "G-KG12PQZM5B"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app); // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const bingoEvents = [
             "A key change happens mid-song",
             "Pyrotechnics light up the stage",
             "The host makes a joke that falls flat",
@@ -118,59 +92,7 @@
             "The camera cuts to a cute child in the audience"
         ];
 
-        function startNewGame() {
-            const container = document.getElementById('bingoCardsContainer');
-            container.innerHTML = ''; // Clear existing cards
-
-            for (let i = 0; i < 4; i++) { // Generate 4 bingo cards
-                const cardWrapper = document.createElement('div');
-                cardWrapper.classList.add('bingo-card');
-
-                const playerName = document.createElement('div');
-                playerName.classList.add('player-name');
-                playerName.innerText = `Card ${i + 1}`;
-                cardWrapper.appendChild(playerName);
-
-                // Shuffle and select 25 random events
-                const selectedEvents = shuffleArray([...eurovisionEvents]).slice(0, 25);
-
-                selectedEvents.forEach(event => {
-                    const cell = document.createElement('div');
-                    cell.classList.add('bingo-cell');
-                    cell.innerText = event;
-                    cell.addEventListener('click', () => {
-                        cell.classList.toggle('marked');
-                    });
-                    cardWrapper.appendChild(cell);
-                });
-
-                const claimButton = document.createElement('button');
-                claimButton.classList.add('claim-card-btn');
-                claimButton.innerText = "Claim This Card";
-                claimButton.dataset.claimed = false;
-
-                const playerAssigned = document.createElement('div');
-                playerAssigned.classList.add('player-assigned');
-                playerAssigned.innerText = "";
-
-                claimButton.addEventListener('click', () => {
-                    if (claimButton.dataset.claimed === "false") {
-                        const playerName = prompt("Enter your name to claim this card:");
-                        if (playerName) {
-                            playerAssigned.innerText = `Claimed by: ${playerName}`;
-                            claimButton.dataset.claimed = true;
-                            claimButton.disabled = true;
-                        }
-                    }
-                });
-
-                cardWrapper.appendChild(claimButton);
-                cardWrapper.appendChild(playerAssigned);
-                container.appendChild(cardWrapper);
-            }
-        }
-
-        function shuffleArray(array) {
+        function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
@@ -178,8 +100,66 @@
             return array;
         }
 
-        document.getElementById('newGameButton').addEventListener('click', startNewGame);
-        window.onload = startNewGame;
+        function createCard(cardId) {
+            const cardDiv = document.createElement('div');
+            cardDiv.classList.add('bingo-card');
+            cardDiv.setAttribute('data-card-id', cardId);
+
+            const randomizedEvents = shuffle([...bingoEvents]).slice(0, 25);
+            randomizedEvents.forEach((event, index) => {
+                const cell = document.createElement('div');
+                cell.classList.add('bingo-cell');
+                cell.innerText = event;
+                cell.setAttribute('data-index', index);
+
+                // Sync cell marking with Firebase
+                cell.addEventListener('click', () => {
+                    const isMarked = cell.classList.contains('marked');
+                    database.ref(`cards/${cardId}/cells/${index}`).set(!isMarked);
+                });
+
+                cardDiv.appendChild(cell);
+            });
+
+            return cardDiv;
+        }
+
+        function startGame() {
+            const container = document.getElementById('bingoCardsContainer');
+            container.innerHTML = ''; // Clear existing cards
+
+            for (let i = 0; i < 4; i++) {
+                const cardId = `card${i + 1}`;
+                const card = createCard(cardId);
+                container.appendChild(card);
+
+                // Initialize card state in Firebase
+                database.ref(`cards/${cardId}`).set({
+                    claimedBy: null,
+                    cells: Array(25).fill(false)
+                });
+            }
+        }
+
+        // Listen for changes in Firebase and update UI accordingly
+        database.ref('cards').on('value', (snapshot) => {
+            const cardsData = snapshot.val();
+            if (cardsData) {
+                Object.entries(cardsData).forEach(([cardId, cardData]) => {
+                    const cardDiv = document.querySelector(`[data-card-id="${cardId}"]`);
+                    if (cardDiv) {
+                        cardData.cells.forEach((isMarked, index) => {
+                            const cell = cardDiv.querySelector(`[data-index="${index}"]`);
+                            if (cell) {
+                                cell.classList.toggle('marked', isMarked);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+
+        window.onload = startGame;
     </script>
 </body>
 </html>
