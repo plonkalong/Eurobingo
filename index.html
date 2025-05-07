@@ -66,9 +66,8 @@
     };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
-
+    import { getDatabase, ref, set, onValue } from "firebase/database";
+const database = getDatabase(app);
     // Function to start a new game
     function startGame() {
         const container = document.getElementById('bingoCardsContainer');
