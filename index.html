@@ -39,10 +39,12 @@
             justify-content: center;
             text-align: center;
             aspect-ratio: 1 / 1;
-            font-size: 0.75rem;
+            font-size: 0.65rem; /* Reduced font size to fit text */
             line-height: 1.2;
             padding: 0.25rem;
-            word-break: break-word;
+            word-break: break-word; /* Ensures long words wrap */
+            overflow-wrap: break-word; /* Ensures content fits */
+            text-align: center;
         }
         .bingo-cell.marked {
             background-color: #FFD700;
@@ -59,6 +61,25 @@
         .player-name {
             font-weight: bold;
             margin-bottom: 0.5rem;
+        }
+        .claim-card-btn {
+            display: block;
+            margin: 10px auto;
+            background-color: #4CAF50;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .claim-card-btn:hover {
+            background-color: #45a049;
+        }
+        .player-assigned {
+            font-size: 0.8rem;
+            color: #FFD700;
+            text-align: center;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -101,14 +122,13 @@
             const container = document.getElementById('bingoCardsContainer');
             container.innerHTML = ''; // Clear existing cards
 
-            const playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"]; // Assign one card per player
             for (let i = 0; i < 4; i++) { // Generate 4 bingo cards
                 const cardWrapper = document.createElement('div');
                 cardWrapper.classList.add('bingo-card');
-                
+
                 const playerName = document.createElement('div');
                 playerName.classList.add('player-name');
-                playerName.innerText = playerNames[i];
+                playerName.innerText = `Card ${i + 1}`;
                 cardWrapper.appendChild(playerName);
 
                 // Shuffle and select 25 random events
@@ -124,6 +144,28 @@
                     cardWrapper.appendChild(cell);
                 });
 
+                const claimButton = document.createElement('button');
+                claimButton.classList.add('claim-card-btn');
+                claimButton.innerText = "Claim This Card";
+                claimButton.dataset.claimed = false;
+
+                const playerAssigned = document.createElement('div');
+                playerAssigned.classList.add('player-assigned');
+                playerAssigned.innerText = "";
+
+                claimButton.addEventListener('click', () => {
+                    if (claimButton.dataset.claimed === "false") {
+                        const playerName = prompt("Enter your name to claim this card:");
+                        if (playerName) {
+                            playerAssigned.innerText = `Claimed by: ${playerName}`;
+                            claimButton.dataset.claimed = true;
+                            claimButton.disabled = true;
+                        }
+                    }
+                });
+
+                cardWrapper.appendChild(claimButton);
+                cardWrapper.appendChild(playerAssigned);
                 container.appendChild(cardWrapper);
             }
         }
