@@ -29,6 +29,7 @@
             grid-template-columns: repeat(5, 1fr);
             gap: 5px;
             padding: 10px;
+            margin-bottom: 1rem;
         }
         .bingo-cell {
             transition: all 0.3s ease;
@@ -55,14 +56,9 @@
         .bingo-title {
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
-        .bingo-message {
-            animation: pulse 1s infinite;
-            text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #0f0, 0 0 40px #0f0;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+        .player-name {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -78,36 +74,66 @@
     </div>
     <main id="bingoCardsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-5xl"></main>
     <script>
+        const eurovisionEvents = [
+            "A key change happens mid-song",
+            "Pyrotechnics light up the stage",
+            "The host makes a joke that falls flat",
+            "A country gets booed during voting",
+            "A performer wears a cape",
+            "A wind machine is in full effect",
+            "An artist sings barefoot",
+            "A song includes the word 'love'",
+            "A costume change happens on stage",
+            "Someone sings in a made-up language",
+            "A contestant plays an instrument live",
+            "A ballad brings the audience to tears",
+            "A song features traditional folk instruments",
+            "The audience waves their flags wildly",
+            "A contestant has glitter on their face",
+            "A technical glitch happens mid-performance",
+            "The host speaks in multiple languages",
+            "A standing ovation breaks out",
+            "A song has a dance break",
+            "The camera cuts to a cute child in the audience"
+        ];
+
         function startNewGame() {
             const container = document.getElementById('bingoCardsContainer');
             container.innerHTML = ''; // Clear existing cards
 
-            for (let i = 0; i < 2; i++) { // Example: Generate 2 bingo cards
-                const card = document.createElement('div');
-                card.classList.add('bingo-card');
+            const playerNames = ["Player 1", "Player 2", "Player 3", "Player 4"]; // Assign one card per player
+            for (let i = 0; i < 4; i++) { // Generate 4 bingo cards
+                const cardWrapper = document.createElement('div');
+                cardWrapper.classList.add('bingo-card');
+                
+                const playerName = document.createElement('div');
+                playerName.classList.add('player-name');
+                playerName.innerText = playerNames[i];
+                cardWrapper.appendChild(playerName);
 
-                const numbers = Array.from({ length: 25 }, (_, i) => i + 1);
-                shuffle(numbers);
+                // Shuffle and select 25 random events
+                const selectedEvents = shuffleArray([...eurovisionEvents]).slice(0, 25);
 
-                for (let j = 0; j < 25; j++) {
+                selectedEvents.forEach(event => {
                     const cell = document.createElement('div');
                     cell.classList.add('bingo-cell');
-                    cell.innerText = numbers[j];
+                    cell.innerText = event;
                     cell.addEventListener('click', () => {
                         cell.classList.toggle('marked');
                     });
-                    card.appendChild(cell);
-                }
+                    cardWrapper.appendChild(cell);
+                });
 
-                container.appendChild(card);
+                container.appendChild(cardWrapper);
             }
         }
 
-        function shuffle(array) {
+        function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
+            return array;
         }
 
         document.getElementById('newGameButton').addEventListener('click', startNewGame);
